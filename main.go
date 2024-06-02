@@ -7,11 +7,13 @@ import (
 
 func main() {
 	chanmsg := make(chan int)
-
+	done := make(chan int)
 	go func() {
 		for i := 0; i < 5; i++ {
 			chanmsg <- i
 		}
+		close(chanmsg)
+		close(done)
 	}()
 
 	recv := func(chanmsg chan int, id int) chan int {
@@ -23,6 +25,9 @@ func main() {
 					time.Sleep(time.Millisecond * 200)
 					fmt.Println(id, "got message", b)
 					next <- b
+				case <-done:
+					close(next)
+					return
 				}
 			}
 		}()
@@ -34,5 +39,5 @@ func main() {
 		time.Sleep(time.Millisecond * 200)
 		fmt.Println("3 got message", msg)
 	}
-	time.Sleep(time.Second * 10)
+
 }
